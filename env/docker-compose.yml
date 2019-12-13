@@ -1,0 +1,68 @@
+version: '3'
+services:
+
+  #PHP Service
+  php-fpm:
+    build:
+      context: ./php
+      dockerfile: Dockerfile
+    container_name: club-plein-air-altitude_php-fpm
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - ../src/:/var/www
+      - ./php/php.ini:/usr/local/etc/php/php.ini
+    networks:
+      - club-plein-air-network
+
+  #Nginx Service
+  nginx:
+    container_name: club-plein-air-altitude_nginx
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../src/:/var/www
+      - ./nginx/sites/:/etc/nginx/sites-available
+    depends_on:
+      - php-fpm
+    networks:
+      - club-plein-air-network
+
+  #MySQL Service
+  mysql:
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    container_name: club-plein-air-altitude_mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: secret
+      MYSQL_DATABASE: club-plein-air-altitude
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - dbdata:/var/lib/mysql/
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - club-plein-air-network
+
+#Docker Networks
+networks:
+  club-plein-air-network:
+    driver: bridge
+
+#Volumes
+volumes:
+  dbdata:
+    driver: local
