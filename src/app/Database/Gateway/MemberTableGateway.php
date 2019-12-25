@@ -4,32 +4,31 @@
 namespace App\Database\Gateway;
 
 
+use App\Database\PDOBinding;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Driver\Statement;
 
-class MemberTableGateway extends BaseGateway
-{
+class MemberTableGateway extends BaseGateway {
+    /**
+     * @var Statement
+     */
+    private $createStmt;
 
     /**
      * @var Statement
      */
-    private $createStatement;
+    private $createEmailStmt;
 
     /**
      * @var Statement
      */
-    private $createEmailStatement;
+    private $createUniversityStmt;
 
     /**
      * @var Statement
      */
-    private $createUniversityStatement;
-
-    /**
-     * @var Statement
-     */
-    private $createFacebookStatement;
+    private $createFacebookStmt;
 
     /**
      * @var Statement
@@ -37,110 +36,167 @@ class MemberTableGateway extends BaseGateway
     private $deleteStatement;
 
     /**
+     * @var Statement
+     */
+    private $findStatement;
+
+    /**
+     * @var Statement
+     */
+    private $permanentStmt;
+
+    /**
+     * @var Statement
+     */
+    private $adminStmt;
+
+    /**
+     * @var Statement
+     */
+    private $findPermanentStmt;
+
+    /**
+     * @var Statement
+     */
+    private $findAdminStmt;
+
+    /**
+     * @var Statement
+     */
+    private $updateStmt;
+
+    /**
      * Serializes a new member entity in the database
      *
+     * @param string $firstName @required
+     * @param string $lastName @required
+     * @param string $password @required
+     * @param bool $isPermanent
+     * @param bool $isAdmin
+     * @param string|null $email
+     * @param string|null $facebook
+     * @param string|null $university
+     * @return array
+     * @throws DBALException
+     */
+    public function create(string $firstName, string $lastName, string $password, bool $isPermanent = false,
+                           bool $isAdmin = false, string $email = null, string $facebook = null, string $university = null): array {
+        $query = "CALL create_member(
+                    @member_first_name   := :first_name,
+                    @member_last_name    := :last_name,
+                    @member_email        := :email,
+                    @member_password     := :password,
+                    @member_cip		   := :university,
+                    @member_facebook     := :facebook,
+                    @is_permanent 	   := :is_permanent,
+                    @is_admin          := :is_admin
+                )";
+
+        $bindings = array(
+            new PDOBinding('first_name', $firstName, ParameterType::STRING),
+            new PDOBinding('last_name', $lastName, ParameterType::STRING),
+            new PDOBinding('email', $email, ParameterType::STRING),
+            new PDOBinding('password', $password, ParameterType::STRING),
+            new PDOBinding('facebook', $facebook, ParameterType::STRING),
+            new PDOBinding('university', $university, ParameterType::STRING),
+            new PDOBinding('is_permanent', $isPermanent, ParameterType::BOOLEAN),
+            new PDOBinding('is_admin', $isAdmin, ParameterType::BOOLEAN),
+        );
+
+        $this->prepareStatement($this->createStmt, $query, $bindings);
+        $this->createStmt->execute();
+
+        $results = $this->createStmt->fetchAll();
+        $this->createStmt->closeCursor();
+
+        return isset($results[0]) ? $results[0] : array();
+    }
+
+    /**
+     * @param int $memberId
      * @param string $firstName
      * @param string $lastName
-     * @param string $passwd
-     * @return int The last inserted id
+     * @param string $password
+     * @param bool $isPermanent
+     * @param bool $isAdmin
+     * @param string|null $email
+     * @param string|null $facebook
+     * @param string|null $university
+     * @return array
      * @throws DBALException
      */
-    public function create(string $firstName, string $lastName, string $passwd): int {
-        if ($this->createStatement == null) {
-            $this->createStatement = $this->prepareStatement(
-                "INSERT INTO member (first_name, last_name, password, created_at, updated_at) VALUES (:first_name, :last_name, :password, NOW(), NOW())"
-            );
-        }
+    public function update(int $memberId, string $firstName, string $lastName, string $password, bool $isPermanent = false,
+                           bool $isAdmin = false, string $email = null, string $facebook = null, string $university = null): array {
 
-        $this->createStatement->bindValue('first_name', $firstName, ParameterType::STRING);
-        $this->createStatement->bindValue('last_name', $lastName, ParameterType::STRING);
-        $this->createStatement->bindValue('password', $passwd, ParameterType::STRING);
+        $statement = "CALL update_member(
+                @member_uid		     := :member_id,
+				@member_first_name   := :first_name,
+				@member_last_name    := :last_name,
+				@member_email        := :email,
+				@member_password     := :password,
+				@member_cip		     := :university,
+				@member_facebook     := :facebook,
+				@is_permanent 	     := :is_permanent,
+				@is_admin            := :is_admin
+			)";
 
-        $this->createStatement->execute();
+        $bindings = array(
+            new PDOBinding('member_id', $memberId, ParameterType::INTEGER),
+            new PDOBinding('first_name', $firstName, ParameterType::STRING),
+            new PDOBinding('last_name', $lastName, ParameterType::STRING),
+            new PDOBinding('email', $email, ParameterType::STRING),
+            new PDOBinding('password', $password, ParameterType::STRING),
+            new PDOBinding('facebook', $facebook, ParameterType::STRING),
+            new PDOBinding('university', $university, ParameterType::STRING),
+            new PDOBinding('is_permanent', $isPermanent, ParameterType::BOOLEAN),
+            new PDOBinding('is_admin', $isAdmin, ParameterType::BOOLEAN),
 
-        return $this->conn->lastInsertId();
-    }
-
-    /**
-     * Links a member with an email address
-     *
-     * @param int $uid
-     * @param string $email
-     * @return int The number of affected rows, should be 0 or 1
-     * @throws DBALException
-     */
-    public function createEmail(int $uid, string $email): int {
-        if ($this->createEmailStatement == null) {
-            $this->createStatement = $this->prepareStatement(
-                "INSERT INTO member_email(member_id, email) VALUE (:member_id, :email)"
-            );
-        }
-
-        $this->createEmailStatement->bindValue('member_id', $uid);
-        $this->createEmailStatement->bindValue('email', $email);
-
-        return $this->createEmailStatement->execute();
-    }
-
-    /**
-     * Links a member with a university unique identifier
-     *
-     * @param int $uid
-     * @param string $university
-     * @return int The number of affected rows, should be 0 or 1
-     * @throws DBALException
-     */
-    public function createUniversity(int $uid, string $university): int {
-        if ($this->createUniversityStatement == null) {
-            $this->createUniversityStatement = $this->prepareStatement(
-                "INSERT INTO member_university(member_id, cip) VALUE (:member_id, :university)"
-            );
-        }
-
-        $this->createUniversityStatement->bindValue('member_id', $uid);
-        $this->createUniversityStatement->bindValue('university', $university);
-
-        return $this->createUniversityStatement->execute(
-            array(':member_id' => $uid, ':university' => $university)
         );
+
+        $this->prepareStatement($this->updateStmt, $statement, $bindings);
+
+        $this->updateStmt->execute();
+        $results = $this->updateStmt->fetchAll();
+        $this->updateStmt->closeCursor();
+
+        return isset($results[0]) ? $results[0] : array();
+
     }
 
     /**
-     * Links a member with a facebook account
+     * Returns a resource found by its primary key
      *
-     * @param int $uid
-     * @param string $facebook
-     * @return int The number of affected rows, should be 0 or 1
+     * @param int $memberId
+     * @return array
      * @throws DBALException
      */
-    public function createFacebook(int $uid, string $facebook): int {
-        if ($this->createFacebookStatement == null) {
-            $this->createFacebookStatement = $this->prepareStatement(
-                "INSERT INTO member_facebook(member_id, facebook_link) VALUE (:member_id, :facebook_link)"
-            );
-        }
+    public function find(int $memberId): array {
 
-        $this->createFacebookStatement->bindValue('member_id', $uid);
-        $this->createFacebookStatement->bindValue('facebook_link', $facebook);
+        $this->prepareStatement(
+            $this->findStatement,
+            "SELECT * FROM member_view WHERE member_id = :member_id",
+            array(new PDOBinding('member_id', $memberId, ParameterType::INTEGER))
+        );
+        $this->findStatement->execute();
 
-        return $this->createFacebookStatement->execute();
+        $results = $this->findStatement->fetchAll();
+
+        return isset($results[0]) ? $results[0] : $results;
     }
 
     /**
      * Destroys a member from the database
      *
-     * @param int $uid
+     * @param int $memberId
      * @return int The number of affected rows
      * @throws DBALException
      */
-    public function delete(int $uid): int {
-        if ($this->deleteStatement == null) {
-            $this->deleteStatement = $this->prepareStatement(
-                "DELETE FROM member WHERE member_id = :member_id"
-            );
-        }
-
-        $this->deleteStatement->bindValue('member_id', $uid);
+    public function delete(int $memberId): int {
+        $this->prepareStatement(
+            $this->deleteStatement,
+            "DELETE FROM member WHERE member_id = :member_id",
+            array(new PDOBinding('member_id', $memberId, ParameterType::INTEGER))
+        );
 
         return $this->deleteStatement->execute();
     }
@@ -154,11 +210,8 @@ class MemberTableGateway extends BaseGateway
     public function countRows() {
         $stmt = $this->conn->query("SELECT COUNT(*) AS total FROM member");
         $rows = $stmt->fetchAll();
+        $stmt->closeCursor();
 
-        if (isset($rows[0])) {
-            return (int) $rows[0]['total'];
-        }
-
-        return 0;
+        return isset($rows[0]) ? (int)$rows[0]['total'] : 0;
     }
 }

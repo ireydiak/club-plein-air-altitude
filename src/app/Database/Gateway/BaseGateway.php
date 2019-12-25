@@ -2,6 +2,7 @@
 
 namespace App\Database\Gateway;
 
+use App\Database\PDOBinding;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Driver\Statement;
 use Doctrine\DBAL\Connection;
@@ -21,12 +22,12 @@ class BaseGateway {
 
     /**
      * @var Connection;
-
      */
     protected $conn;
 
     /**
-     * BaseGateway constructor.
+     * BaseGateway constructor
+     *
      * @param Connection $conn
      */
     public function __construct(Connection $conn) {
@@ -35,14 +36,21 @@ class BaseGateway {
     }
 
     /**
-     * Returns a standardized PDO Statement for a gateway
+     * Prepares a standardized PDO Statement for a gateway with its bindings
      *
-     * @param string $query
-     * @return bool|Statement
+     * @param $stmt
+     * @param string $statement
+     * @param array<PDOBinding> $bindings
      * @throws DBALException
      */
-    protected function prepareStatement(string $query) {
-        return $this->conn->prepare($query);
+    protected function prepareStatement(&$stmt, string $statement, array $bindings): void {
+        if ($stmt == null) {
+            $stmt = $this->conn->prepare($statement);
+        }
+
+        foreach ($bindings as $b) {
+            $stmt->bindValue($b->param, $b->value, $b->type);
+        }
     }
 
 }

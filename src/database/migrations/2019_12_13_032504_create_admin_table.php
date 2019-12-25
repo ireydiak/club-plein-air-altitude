@@ -13,8 +13,12 @@ class CreateAdminTable extends Migration
      */
     public function up()
     {
-        Schema::table('admin', function (Blueprint $table) {
-            //
+        Schema::create('admin', function (Blueprint $table) {
+            $table->bigInteger('member_id')->unsigned();
+            $table->primary('member_id');
+            $table->foreign('member_id')
+                ->references('member_id')->on('permanent')
+                ->onDelete('cascade');
         });
     }
 
@@ -25,8 +29,6 @@ class CreateAdminTable extends Migration
      */
     public function down()
     {
-        Schema::table('admin', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('admin');
     }
 }
