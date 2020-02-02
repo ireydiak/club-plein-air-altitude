@@ -1,0 +1,1 @@
+Exécute une commande node (i.e. npm) dans un conteneur utilisant l'image node commune Libéo.

@@ -1,68 +1,78 @@
 version: '3'
 services:
-
-  #PHP Service
-  php-fpm:
-    build:
-      context: ./php
-      dockerfile: Dockerfile
-    container_name: club-plein-air-altitude_php-fpm
-    restart: unless-stopped
-    tty: true
-    volumes:
-      - ../src/:/var/www
-      - ./php/php.ini:/usr/local/etc/php/php.ini
-    networks:
-      - club-plein-air-network
-
-  #Nginx Service
   nginx:
     container_name: club-plein-air-altitude_nginx
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    tty: true
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ../src/:/var/www
-      - ./nginx/sites/:/etc/nginx/sites-available
+    privileged: true
+    image: docker.gitlab.libeo.com/docker/nginx:1.15-fpm
+    environment:
+      CURRENT_UID: ${CURRENT_UID}
+      SERVER_ROOT: /var/www/public
+      PHP_FPM_HOST: php-fpm
     depends_on:
       - php-fpm
-    networks:
-      - club-plein-air-network
-
-  #MySQL Service
-  mysql:
-    build:
-      context: ./mysql
-      dockerfile: Dockerfile
-    container_name: club-plein-air-altitude_mysql
-    restart: unless-stopped
-    tty: true
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: secret
-      MYSQL_DATABASE: club-plein-air-altitude
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mysql
     volumes:
-      - dbdata:/var/lib/mysql/
-      - ./mysql/my.cnf:/etc/mysql/my.cnf
+      - ../src/:/var/www
+    labels:
+      - "traefik.docker.network=traefik_default"
+      - "traefik.frontend.rule=Host:club-plein-air-altitude.local.vici.io"
     networks:
-      - club-plein-air-network
+      - traefik_default
+      - backend
+  php-fpm:
+    container_name: club-plein-air-altitude_php-fpm
+    image: docker.gitlab.libeo.com/docker/php:7.3-fpm
+    environment:
+      CURRENT_UID: ${CURRENT_UID}
+      MEMORY_LIMIT: '512M'
+    volumes:
+      - ../src/:/var/www
+    depends_on:
+      - mysql
+      - memcached
+      - maildev
+    networks:
+      backend:
+        aliases:
+          - php-fpm
+  mysql:
+    container_name: club-plein-air-altitude_mysql
+    image: mysql:5.7
+    command:
+      - --innodb-flush-log-at-trx-commit=0
+    environment:
+      MYSQL_ROOT_PASSWORD: statut
+      MYSQL_USER: statut
+      MYSQL_PASSWORD: statut
+      MYSQL_DATABASE: statut
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      backend:
+        aliases:
+          - mysql
+  maildev:
+    container_name: club-plein-air-altitude_maildev
+    image: djfarrelly/maildev
+    labels:
+      - "traefik.docker.network=traefik_default"
+      - "traefik.frontend.rule=Host:mail.club-plein-air-altitude.local.vici.io"
+      - "traefik.port=80"
+    networks:
+      traefik_default:
+      backend:
+        aliases:
+          - maildev
+  memcached:
+    container_name: club-plein-air-altitude_memcached
+    image: memcached
+    networks:
+      backend:
+        aliases:
+          - memcached
 
-#Docker Networks
 networks:
-  club-plein-air-network:
-    driver: bridge
-
-#Volumes
+  backend:
+  traefik_default:
+    external: true
 volumes:
-  dbdata:
-    driver: local
+  mysql:
