@@ -7,17 +7,17 @@ class Member extends BaseDomain
     /**
      * @var int
      */
-    protected $member_id;
+    protected $memberId;
 
     /**
      * @var string
      */
-    public $first_name;
+    public $firstName;
 
     /**
      * @var string
      */
-    public $last_name;
+    public $lastName;
 
     /**
      * @var string
@@ -28,13 +28,13 @@ class Member extends BaseDomain
      * @nullable
      * @var string
      */
-    public $university_id;
+    public $universityId;
 
     /**
      * @nullable
      * @var string
      */
-    public $facebook_link;
+    public $facebookLink;
 
     /**
      * @nullable
@@ -73,7 +73,7 @@ class Member extends BaseDomain
     }
 
     public function getKey(): int {
-        return $this->member_id;
+        return $this->memberId;
     }
 
     public function getPassword(): string {
@@ -89,10 +89,10 @@ class Member extends BaseDomain
         if (!$other instanceof Member) {
             return false;
         }
-        return $this->first_name    == $other->first_name &&
-            $this->last_name        == $other->last_name &&
+        return $this->firstName    == $other->firstName &&
+            $this->lastName        == $other->lastName &&
             $this->email            == $other->email &&
-            $this->facebook_link    == $other->facebook_link &&
+            $this->facebookLink    == $other->facebookLink &&
             $this->role             == $other->role;
     }
 
@@ -108,14 +108,50 @@ class Member extends BaseDomain
         return $this->role >= self::PERMANENT_ROLE;
     }
 
-    /**
-     * TODO: Use better validation technique
-     * @return bool
-     */
-    public function validate() {
-        return !empty($this->first_name) &&
-            !empty($this->last_name) &&
-            !empty($this->password) &&
-            (!empty($this->university_id) || !empty($this->email) || !empty($this->facebook_link));
+    public static function form(): array
+    {
+        return [
+            'firstName' => [
+                'label' => 'Prénom',
+                'type' => 'text',
+                'required' => true
+            ],
+            'lastName' => [
+                'label' => 'Nom',
+                'type' => 'text',
+                'required' => true
+            ],
+            'password' => [
+                'label' => 'Password',
+                'type' => 'password',
+                'required' => true
+            ],
+            'email' => [
+                'label' => 'Email',
+                'type' => 'text',
+                'required' => false
+            ],
+            'facebook' => [
+                'label' => 'Facebook',
+                'required' => false,
+                'type' => 'text'
+            ],
+            'cip' => [
+                'label' => 'CIP',
+                'type' => 'text',
+                'required' => false
+            ],
+            'isPermanent' => [
+                'label' => 'Est un permanent',
+                'type' => 'checkbox',
+                'required' => false
+            ],
+            'isAdmin' => [
+                'label' => 'Est un administrateur',
+                'type' => 'checkbox',
+                'required' => false
+            ]
+        ];
     }
+
 }

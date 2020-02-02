@@ -32,7 +32,6 @@ class BaseGateway {
      */
     public function __construct(Connection $conn) {
         $this->conn = $conn;
-        $this->conn->setAutoCommit(false); // disable auto-commit
     }
 
     /**

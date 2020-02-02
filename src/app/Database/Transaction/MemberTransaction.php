@@ -22,7 +22,6 @@ class MemberTransaction
 
     public function __construct(Connection $conn) {
         $this->conn = $conn;
-        $this->conn->setAutoCommit(false);
         $this->mtg = new MemberTableGateway($this->conn);
     }
 
@@ -36,14 +35,14 @@ class MemberTransaction
             $this->conn->beginTransaction();
 
             $row = $this->mtg->create(
-                $attributes['first_name'],
-                $attributes['last_name'],
+                $attributes['firstName'],
+                $attributes['lastName'],
                 $attributes['password'],
-                $attributes['is_permanent'],
-                $attributes['is_admin'],
+                $attributes['isPermanent'],
+                $attributes['isAdmin'],
                 $attributes['email'],
                 $attributes['facebook'],
-                $attributes['university_id']
+                $attributes['cip']
             );
 
             $this->conn->commit();

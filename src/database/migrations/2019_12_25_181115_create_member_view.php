@@ -13,7 +13,8 @@ class CreateMemberView extends Migration {
      */
     public function up() {
         Schema::table('member_view', function (Blueprint $table) {
-            DB::statement("
+            DB::unprepared("
+                DROP VIEW IF EXISTS member_view;
                 CREATE VIEW member_view AS
                 SELECT DISTINCT member_id, first_name, last_name, password, created_at, updated_at, email, facebook_link, cip,
                                 EXISTS(SELECT member_id FROM admin NATURAL JOIN member) AS is_admin,
@@ -32,6 +33,6 @@ class CreateMemberView extends Migration {
      * @return void
      */
     public function down() {
-        DB::statement("DROP VIEW member_view;");
+        DB::unprepared("DROP VIEW member_view;");
     }
 }

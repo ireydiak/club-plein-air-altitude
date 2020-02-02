@@ -134,7 +134,7 @@ class MemberTableGateway extends BaseGateway {
 				@member_last_name    := :last_name,
 				@member_email        := :email,
 				@member_password     := :password,
-				@member_cip		     := :university,
+				@member_cip	     := :cip,
 				@member_facebook     := :facebook,
 				@is_permanent 	     := :is_permanent,
 				@is_admin            := :is_admin
@@ -147,7 +147,7 @@ class MemberTableGateway extends BaseGateway {
             new PDOBinding('email', $email, ParameterType::STRING),
             new PDOBinding('password', $password, ParameterType::STRING),
             new PDOBinding('facebook', $facebook, ParameterType::STRING),
-            new PDOBinding('university', $university, ParameterType::STRING),
+            new PDOBinding('cip', $university, ParameterType::STRING),
             new PDOBinding('is_permanent', $isPermanent, ParameterType::BOOLEAN),
             new PDOBinding('is_admin', $isAdmin, ParameterType::BOOLEAN),
 
@@ -182,6 +182,14 @@ class MemberTableGateway extends BaseGateway {
         $results = $this->findStatement->fetchAll();
 
         return isset($results[0]) ? $results[0] : $results;
+    }
+
+    public function findAll(): array {
+        $stmt = $this->conn->query("SELECT * FROM member_view");
+        $rows = $stmt->fetchAll();
+        $stmt->closeCursor();
+
+        return $rows;
     }
 
     /**

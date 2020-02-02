@@ -24,7 +24,10 @@ class BaseDomain
      */
     protected function fill(array $attrs): void {
         foreach (get_object_vars($this) as $key => $value) {
-            $this->$key = isset($attrs[$key]) ? $attrs[$key] : NULL;
+            $keyName = preg_replace_callback('/_([a-z]?)/', function($match) {
+                return strtoupper($match[1]);
+            }, $key);
+            $this->$keyName = isset($attrs[$key]) ? $attrs[$key] : NULL;
         }
     }
 

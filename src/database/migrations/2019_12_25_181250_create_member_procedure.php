@@ -57,15 +57,15 @@ class CreateMemberProcedure extends Migration
                     VALUES (NULL, member_first_name, member_last_name, member_password, NOW(), NOW())
                     ;
 
-                    SET @member_id = (
+                    SET @member_uid = (
                         SELECT member_id FROM member WHERE member_id = LAST_INSERT_ID()
                     )
                     ;
 
-                    CALL update_member_contact(@member_id, member_cip, member_email, member_facebook);
-                    CALL update_member_privileges(@member_id, is_permanent, is_admin);
+                    CALL update_member_contact(@member_uid, member_cip, member_email, member_facebook);
+                    CALL update_member_privileges(@member_uid, is_permanent, is_admin);
 
-                    SELECT * FROM member_view WHERE member_id = @member_id;
+                    SELECT * FROM member_view WHERE member_id = @member_uid;
                 END;
             ');
     }
@@ -75,7 +75,7 @@ class CreateMemberProcedure extends Migration
         DB::unprepared("
             DROP PROCEDURE IF EXISTS update_member_contact;
             CREATE PROCEDURE update_member_contact(
-                member_id      BIGINT,
+                member_uid      BIGINT,
                 member_cip       CHAR(8),
                 member_email     VARCHAR(255),
                 member_facebook  VARCHAR(255)
@@ -83,30 +83,30 @@ class CreateMemberProcedure extends Migration
             BEGIN
                 IF member_cip IS NOT NULL AND member_cip <> ''
                 THEN
-                    IF NOT EXISTS (SELECT member_id FROM member_university WHERE member_id = @member_id) THEN
-                        INSERT INTO member_university (member_id, cip) VALUES (@member_id, member_cip);
+                    IF NOT EXISTS (SELECT member_id FROM member_university WHERE member_id = member_uid) THEN
+                        INSERT INTO member_university (member_id, cip) VALUES (member_uid, member_cip);
                     ELSE
-                        UPDATE member_university SET cip = member_cip WHERE member_id = @member_id;
+                        UPDATE member_university SET cip = member_cip WHERE member_id = member_uid;
                     END IF;
                 END IF;
 
                 IF member_email IS NOT NULL AND member_email <> ''
                 THEN
-                    IF NOT EXISTS(SELECT member_id FROM member_email WHERE member_id = @member_id)
+                    IF NOT EXISTS(SELECT member_id FROM member_email WHERE member_id = member_uid)
                     THEN
-                        INSERT INTO member_email (member_id, email) VALUES (@member_id, member_email);
+                        INSERT INTO member_email (member_id, email) VALUES (member_uid, member_email);
                     ELSE
-                        UPDATE member_email SET email = member_email WHERE member_id = @member_id;
+                        UPDATE member_email SET email = member_email WHERE member_id = member_uid;
                     END IF;
                 END IF;
 
                 IF member_facebook IS NOT NULL AND member_facebook <> ''
                 THEN
-                    IF NOT EXISTS(SELECT member_id FROM member_facebook WHERE member_id = @member_id)
+                    IF NOT EXISTS(SELECT member_id FROM member_facebook WHERE member_id = member_uid)
                     THEN
-                        INSERT INTO member_facebook (member_id, facebook_link) VALUES (@member_id, member_facebook);
+                        INSERT INTO member_facebook (member_id, facebook_link) VALUES (member_uid, member_facebook);
                     ELSE
-                        UPDATE member_facebook SET facebook_link = member_facebook WHERE member_id = @member_id;
+                        UPDATE member_facebook SET facebook_link = member_facebook WHERE member_id = member_uid;
                     END IF;
                 END IF;
             END;
@@ -117,20 +117,20 @@ class CreateMemberProcedure extends Migration
         DB::unprepared('
             DROP PROCEDURE IF EXISTS update_member_privileges;
             CREATE PROCEDURE update_member_privileges(
-                member_id     BIGINT,
+                member_uid     BIGINT,
                 is_permanent  BOOLEAN,
                 is_admin      BOOLEAN
             )
             BEGIN
                 IF is_permanent IS TRUE THEN
-                    INSERT INTO permanent (member_id) VALUES(member_id);
+                    INSERT INTO permanent (member_id) VALUES(member_uid);
                 ELSE
-                    DELETE FROM permanent WHERE member_id = member_id;
+                    DELETE FROM permanent WHERE member_id = member_uid;
                 END IF;
                 IF is_admin IS TRUE THEN
-                    INSERT INTO admin (member_id) VALUES(member_id);
+                    INSERT INTO admin (member_id) VALUES(member_uid);
                 ELSE
-                    DELETE FROM admin WHERE member_id = member_id;
+                    DELETE FROM admin WHERE member_id = member_uid;
                 END IF;
             END;
         ');

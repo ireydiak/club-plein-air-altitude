@@ -2,10 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Database\Transaction\MemberTransaction;
+use App\Domain\Member;
+use App\Http\Requests\UserStoreRequest;
+use App\User;
+use DB;
+use Doctrine\DBAL\Configuration;
+use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\DriverManager;
 use Illuminate\Http\Request;
 
 class MembersController extends Controller
 {
+    protected $transaction;
+
+    public function __construct() {
+        $config = new Configuration();
+
+        $connectionParams = array(
+            'dbname' => 'statut',
+            'user' => 'statut',
+            'password' => 'statut',
+            'host' => '172.30.0.2',
+            'driver' => 'pdo_mysql',
+        );
+
+        $conn = DriverManager::getConnection($connectionParams, $config);
+        $this->transaction = new MemberTransaction($conn);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -13,7 +38,9 @@ class MembersController extends Controller
      */
     public function index()
     {
-        return response('to be implemented');
+        return view('members/index', [
+           'members' => $this->transaction->all()
+        ]);
     }
 
     /**
@@ -23,7 +50,9 @@ class MembersController extends Controller
      */
     public function create()
     {
-        return view('members/create');
+        return view('members/create', [
+            'model' => json_encode(Member::form())
+        ]);
     }
 
     /**
@@ -32,9 +61,21 @@ class MembersController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(UserStoreRequest $request)
     {
-        //
+        $validated = $request->validated();
+
+        try {
+            if (($attributes = $this->transaction->create($validated)) !== null) {
+                return response()->json(['message' => 'Membre ajouté avec succès', 'user' => new Member($attributes)]);
+            } else {
+                return response()->json(['message' => 'Erreur dans l\'ajout du membre.'], 422);
+            }
+
+        } catch (DBALException $e) {
+            return response()->json(['message' => $e->getMessage(), 'errors' => []], 422);
+        }
+
     }
 
     /**
@@ -45,7 +86,7 @@ class MembersController extends Controller
      */
     public function show($id)
     {
-        //
+        return response('unimplemented');
     }
 
     /**
@@ -56,7 +97,7 @@ class MembersController extends Controller
      */
     public function edit($id)
     {
-        //
+        return response('unimplemented');
     }
 
     /**
@@ -68,7 +109,7 @@ class MembersController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        return response('unimplemented');
     }
 
     /**
@@ -79,6 +120,6 @@ class MembersController extends Controller
      */
     public function destroy($id)
     {
-        //
+        return response('unimplemented');
     }
 }

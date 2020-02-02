@@ -5,7 +5,13 @@
                 v-for="(field, value) in model"
                 :label-for="value"
                 :label="field.label">
+                <b-form-checkbox
+                    v-model="fields[value]"
+                    v-if="field.type === 'checkbox'"
+                    :value="value">
+                </b-form-checkbox>
                 <b-form-input
+                    v-else
                     v-model="fields[value]"
                     :id="value"
                     :type="field.type"
@@ -45,14 +51,22 @@
                     lastName: null,
                     password: null,
                     facebook: null,
-                    cip: null
+                    cip: null,
+                    isPermanent: false,
+                    isAdmin: false
                 }
             }
         },
 
         methods: {
+
             submit() {
+                this.resetErrors();
                 this.$submit(this.$router.users.store, this.fields, this);
+            },
+
+            resetErrors() {
+                this.errors = {};
             }
         },
 
