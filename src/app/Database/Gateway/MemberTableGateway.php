@@ -134,7 +134,7 @@ class MemberTableGateway extends BaseGateway {
 				@member_last_name    := :last_name,
 				@member_email        := :email,
 				@member_password     := :password,
-				@member_cip	     := :cip,
+				@member_cip	         := :cip,
 				@member_facebook     := :facebook,
 				@is_permanent 	     := :is_permanent,
 				@is_admin            := :is_admin

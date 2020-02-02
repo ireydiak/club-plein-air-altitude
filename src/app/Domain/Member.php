@@ -7,7 +7,7 @@ class Member extends BaseDomain
     /**
      * @var int
      */
-    protected $memberId;
+    public $memberId;
 
     /**
      * @var string
@@ -22,13 +22,13 @@ class Member extends BaseDomain
     /**
      * @var string
      */
-    protected $password;
+    public $password;
 
     /**
      * @nullable
      * @var string
      */
-    public $universityId;
+    public $cip;
 
     /**
      * @nullable
@@ -91,9 +91,9 @@ class Member extends BaseDomain
         }
         return $this->firstName    == $other->firstName &&
             $this->lastName        == $other->lastName &&
-            $this->email            == $other->email &&
+            $this->email           == $other->email &&
             $this->facebookLink    == $other->facebookLink &&
-            $this->role             == $other->role;
+            $this->role            == $other->role;
     }
 
     public function setRole(int $role) {
@@ -131,7 +131,7 @@ class Member extends BaseDomain
                 'type' => 'text',
                 'required' => false
             ],
-            'facebook' => [
+            'facebookLink' => [
                 'label' => 'Facebook',
                 'required' => false,
                 'type' => 'text'

@@ -5,6 +5,7 @@ namespace App\Database\Transaction;
 
 
 use App\Database\Gateway\MemberTableGateway;
+use App\Domain\Member;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ConnectionException;
 
@@ -25,6 +26,40 @@ class MemberTransaction
         $this->mtg = new MemberTableGateway($this->conn);
     }
 
+    public function all()
+    {
+        return collect($this->mtg->findAll())->map(function($el) { return new Member($el); });
+    }
+
+    public function findById(int $id): ?Member {
+        if (!empty($this->mtg->find($id))) {
+             return new Member($this->mtg->find($id));
+        }
+
+        return NULL;
+    }
+
+    public function update(int $id, array $attributes): ?Member {
+
+        $result = $this->mtg->update(
+            $id,
+            $attributes['firstName'],
+            $attributes['lastName'],
+            $attributes['password'],
+            $attributes['isPermanent'],
+            $attributes['isAdmin'],
+            $attributes['email'],
+            $attributes['facebookLink'],
+            $attributes['cip']
+        );
+
+        if (!empty($result)) {
+            return new Member($result);
+        }
+
+        return NULL;
+    }
+
     /**
      * @param array $attributes
      * @return array
@@ -41,7 +76,7 @@ class MemberTransaction
                 $attributes['isPermanent'],
                 $attributes['isAdmin'],
                 $attributes['email'],
-                $attributes['facebook'],
+                $attributes['facebookLink'],
                 $attributes['cip']
             );
 

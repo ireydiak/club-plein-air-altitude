@@ -155,8 +155,8 @@ class CreateMemberProcedure extends Migration
                 SET first_name = member_first_name, last_name = member_last_name, password = member_password, updated_at = NOW()
                 WHERE member_id = member_uid;
 
-                CALL update_member_contact(@member_id, member_cip, member_email, member_facebook);
-                CALL update_member_privileges(@member_id, is_permanent, is_admin);
+                CALL update_member_contact(member_uid, member_cip, member_email, member_facebook);
+                CALL update_member_privileges(member_uid, is_permanent, is_admin);
 
                 SELECT * FROM member_view WHERE member_id = member_uid;
             END;

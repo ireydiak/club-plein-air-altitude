@@ -11,6 +11,8 @@ use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\DriverManager;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Validator;
 
 class MembersController extends Controller
 {
@@ -97,7 +99,13 @@ class MembersController extends Controller
      */
     public function edit($id)
     {
-        return response('unimplemented');
+        if (($member = $this->transaction->findById($id)) !== null) {
+            return view('members.edit', [
+                'member' => $this->transaction->findById($id)
+            ]);
+        }
+
+        die('not found');
     }
 
     /**
@@ -109,7 +117,11 @@ class MembersController extends Controller
      */
     public function update(Request $request, $id)
     {
-        return response('unimplemented');
+        if (($member = $this->transaction->findById($id)) !== null) {
+            return response()->json(['message' => 'Member modifié avec succès', 'member' => $member]);
+        }
+
+        return response()->json(['message' => 'Le membre n\'existe pas', 'errors' => []], 422);
     }
 
     /**

@@ -28,7 +28,7 @@
                 </div>
             </b-form-group>
 
-            <b-button type="submit" variant="primary">Créer</b-button>
+            <b-button type="submit" variant="primary">{{ buttonText }}</b-button>
         </b-form>
     </div>
 
@@ -39,7 +39,18 @@
         name: "UserFormComponent",
 
         props: {
-            model: Object
+            model: Object,
+            member: Object,
+            method: String,
+            buttonText: String
+        },
+
+        computed: {
+            url() {
+                return this.method === 'store' ?
+                    this.$router.members.store :
+                    this.$router.members.update.replace('{id}', this.member.memberId);
+            }
         },
 
         data() {
@@ -50,7 +61,7 @@
                     firstName: null,
                     lastName: null,
                     password: null,
-                    facebook: null,
+                    facebookLink: null,
                     cip: null,
                     isPermanent: false,
                     isAdmin: false
@@ -62,7 +73,12 @@
 
             submit() {
                 this.resetErrors();
-                this.$submit(this.$router.users.store, this.fields, this);
+
+                if (this.method === 'update') {
+                    this.fields._method = 'PUT';
+                }
+                console.log(this.fields);
+                this.$submit(this.url, this.fields, this);
             },
 
             resetErrors() {
@@ -75,6 +91,16 @@
                 this.errors[key] = [];
             }
         },
+
+        mounted() {
+            if (this.member) {
+                for (const key in this.member) {
+                    if (this.fields.hasOwnProperty(key)) {
+                        this.fields[key] = this.member[key];
+                    }
+                }
+            }
+        }
 
     }
 </script>

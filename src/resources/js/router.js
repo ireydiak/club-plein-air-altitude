@@ -1,7 +1,8 @@
 export default {
     Routes: {
-        users: {
-            'store': '/members'
+        members: {
+            'store': '/members',
+            'update': '/members/{id}'
         }
     }
 }
