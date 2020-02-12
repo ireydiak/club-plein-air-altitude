@@ -24,14 +24,14 @@ class UserStoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'firstName'     => 'required|alpha',
-            'lastName'      => 'required|alpha',
-            'password'      => 'required',
-            'email'         => 'nullable|email|unique:member_email|required_without_all:cip,facebook',
-            'cip'           => 'nullable|regex:/[a-z]{4}[0-9]{4}/i|unique:member_university|required_without_all:email,facebook',
-            'facebookLink'  => 'nullable|unique:member_facebook,facebook_link|required_without_all:email,cip',
-            'isPermanent'   => 'required|boolean',
-            'isAdmin'       => 'required|boolean'
+            'firstName'     => 'required|regex:/^([0-9\p{Latin}]+[\ -]?)+[a-zA-Z0-9]+$/u',
+            'lastName'      => 'required|regex:/^([0-9\p{Latin}]+[\ -]?)+[a-zA-Z0-9]+$/u',
+            'email'         => 'required|email|unique:member',
+            'role'          => 'required|in:Membre,Admin,Permanent',
+            'phone'         => 'nullable|phone:AUTO,CA',
+            'phoneRegion'   => 'nullable|required_with:phone',
+            'cip'           => 'nullable|regex:/[a-z]{4}[0-9]{4}/i|unique:member_university',
+            'facebookLink'  => 'nullable|unique:member_facebook,facebook_link',
         ];
     }
 }

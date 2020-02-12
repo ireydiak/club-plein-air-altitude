@@ -5,42 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}" type="text/css">
-    <link
-        href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600|Roboto+Condensed:300|Open+Sans:700,300,600,400"
-        rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/9814c398a0.js"></script>
 
 </head>
 
 <body>
 
-{{--@section('top-nav')--}}
-{{--    @include('includes.top-nav')--}}
-{{--@show--}}
-
-{{--<!-- START CONTAINER -->--}}
-{{--<div class="page-container row-fluid">--}}
-{{--    <!-- leftbar -->--}}
-{{--@section('side-nav')--}}
-{{--    @include('includes.side-nav')--}}
-{{--@show--}}
 <!-- START CONTAINER -->
-<div class="container-fluid" id="app">
-    <!-- START CONTENT -->
-    <section id="main-content">
-        <div class="pull-left mobile-pagetitle"><h1 class="">Club de plein air altitude</h1></div>
-        <section class="wrapper main-wrapper">
-            <div class="content-wrapper">
-                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                    @include('includes.errors')
-                </div>
-
+<v-app id="app">
+    <navigation></navigation>
+    <v-content>
+        <v-container
+        class="fill-height">
+            <v-row
+                justify="center">
                 @yield('content')
-            </div>
-            <!-- END CONTAINER -->
-        </section>
-    </section>
-    <script src="{{  mix('/js/app.js') }}" async></script>
-</div>
+            </v-row>
+        </v-container>
+    </v-content>
+</v-app>
+
+<script src="{{  mix('/js/app.js') }}" async></script>
 </body>
 </html>

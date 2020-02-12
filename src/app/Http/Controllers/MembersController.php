@@ -5,14 +5,12 @@ namespace App\Http\Controllers;
 use App\Database\Transaction\MemberTransaction;
 use App\Domain\Member;
 use App\Http\Requests\UserStoreRequest;
-use App\User;
-use DB;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\DriverManager;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Validator;
+use Propaganistas\LaravelPhone\PhoneNumber;
 
 class MembersController extends Controller
 {
@@ -25,7 +23,7 @@ class MembersController extends Controller
             'dbname' => 'statut',
             'user' => 'statut',
             'password' => 'statut',
-            'host' => '172.30.0.2',
+            'host' => '172.30.0.4',
             'driver' => 'pdo_mysql',
         );
 
@@ -36,38 +34,42 @@ class MembersController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index()
     {
         return view('members/index', [
-           'members' => $this->transaction->all()
+            'members' => $this->transaction->all()
         ]);
     }
 
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function create()
     {
-        return view('members/create', [
-            'model' => json_encode(Member::form())
-        ]);
+        return view('members/create');
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param UserStoreRequest $request
+     * @return JsonResponse
      */
-    public function store(UserStoreRequest $request)
+    public function store(UserStoreRequest $request): JsonResponse
     {
         $validated = $request->validated();
 
         try {
+            $validated['isPermanent'] = ($validated['role'] !== 'Membre');
+            $validated['isAdmin'] = ($validated['role'] === 'Admin');
+            $validated['password'] = (isset($validated['password']) ? $validated['password'] : $validated['email']);
+            if (isset($validated['phone']) && !empty($validated['phone'])) {
+                $validated['phone'] = PhoneNumber::make($validated['phone'])->ofCountry($validated['phoneRegion'])->formatE164();
+            }
             if (($attributes = $this->transaction->create($validated)) !== null) {
                 return response()->json(['message' => 'Membre ajouté avec succès', 'user' => new Member($attributes)]);
             } else {
@@ -111,13 +113,17 @@ class MembersController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
     {
         if (($member = $this->transaction->findById($id)) !== null) {
+            $attributes = $request->all();
+            $attributes['isPermanent'] = ($request->input('role') !== 'Membre');
+            $attributes['isAdmin'] = ($request->input('role') === 'Admin');
+            $this->transaction->update($id, $attributes);
             return response()->json(['message' => 'Member modifié avec succès', 'member' => $member]);
         }
 
@@ -133,5 +139,38 @@ class MembersController extends Controller
     public function destroy($id)
     {
         return response('unimplemented');
+    }
+
+    public function importCSV() {
+        $row = 1;
+        if (($handle = fopen("gestion.csv", "r")) !== FALSE) {
+            while (($line = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                if ($row > 1) {
+                    list($uid, $firstName, $lastName, $cip, $phoneNumber, $facebook, $email) = $line;
+
+                    try {
+                        $phoneNumber = PhoneNumber::make($phoneNumber, ['CA', 'FR'])->formatE164();
+                    } catch (\Exception $e) {
+                        $phoneNumber = null;
+                    }
+
+                    if (!empty($uid) && !empty($firstName) && !empty($lastName)) {
+                        $this->transaction->create([
+                            'firstName' => $firstName,
+                            'lastName' => $lastName,
+                            'cip' => (preg_match('/[a-z]{4}[0-9]{4}/', $cip) ? $cip : null) ,
+                            'password' => app('hash')->make($phoneNumber) ?? app('hash')->make('default'),
+                            'facebookLink' => null,
+                            'email' => (!empty($email) ? $email : sprintf('%s.%s@usherbrooke.ca',$firstName, $lastName)),
+                            'phone' => $phoneNumber,
+                            'isPermanent' => false,
+                            'isAdmin' => false
+                        ]);
+                    }
+                }
+                $row += 1;
+            }
+            fclose($handle);
+        }
     }
 }

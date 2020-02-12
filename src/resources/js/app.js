@@ -5,14 +5,14 @@
  */
 
 require('./bootstrap');
-import { BootstrapVue } from 'bootstrap-vue'
+import Vue from 'vue';
 import Routes from './router';
+import vuetify from './vuetify';
+import VueToasted from 'vue-toasted';
 
-const Vue = require('vue');
-
-Vue.use(BootstrapVue);
 Vue.prototype.$eventBus = new Vue();
-Vue.prototype.$router = Routes.Routes;
+Vue.prototype.$router = Routes;
+Vue.use(VueToasted);
 
 window.Vue = Vue;
 require('vue-resource');
@@ -40,35 +40,83 @@ files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
-const app = new Vue({
-    el: '#app',
-});
+new Vue({
+    vuetify
+}).$mount("#app");
+
 
 Vue.prototype.$eventBus.$on('flash-message', (message, type) => {
     console.log(message);
 });
 
+Vue.toasted.register('api_error', (payload) => {
+    if (!payload.message) {
+        return 'Erreur serveur';
+    }
+
+    return payload.message;
+}, {
+    type: 'error',
+    position: 'top-right',
+    keepOnHover: true,
+    duration: 5000
+});
+
+Vue.toasted.register('api_success', (payload) => {
+    if (!payload.message) {
+        return 'Succès';
+    }
+
+    return payload.message;
+}, {
+    type: 'success',
+    position: 'top-right',
+    keepOnHover: true,
+    duration: 5000
+});
+
+Vue.prototype.$submitModel = function(model, context, successCallback, errorCallback) {
+    model.save().then((response) => {
+        console.log(response);
+        context.$toasted.global.api_success(response.data.message);
+
+        model.reset();
+
+        if (successCallback) {
+            successCallback(response);
+        }
+    }).catch((error) => {
+        console.error(error);
+
+        let message = error.body || error.message || '';
+
+        context.$toasted.global.api_error(message);
+
+        if (context.errors) {
+            context.errors = error.errors;
+        }
+
+        if (errorCallback) {
+            errorCallback(error);
+        }
+    });
+};
+
 Vue.prototype.$submit = function(url, data, context, successCallback, errorCallback) {
     context.$http.post(url, data).then(response => {
-        context.$bvToast.toast(response.body.message, {
-            title: 'Succès!',
-            autoHideDelay: 5000,
-            appendToast: false,
-            variant: 'success'
-        });
+        context.$toasted.global.api_success(response.body);
+
         console.log(response);
 
         if (successCallback) {
             successCallback(response);
         }
     }).catch(error => {
-        context.$bvToast.toast(error.body.message, {
-            title: 'Erreur',
-            autoHideDelay: 15000,
-            appendToast: false,
-            variant: 'danger'
-        });
         console.error(error);
+        let message = error.body || error.message || '';
+
+
+        context.$toasted.global.api_error(message);
 
         context.errors = error.body.errors;
 

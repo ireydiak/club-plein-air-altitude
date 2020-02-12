@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateMemberEmailTable extends Migration
+class CreateMemberPhoneTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,13 @@ class CreateMemberEmailTable extends Migration
      */
     public function up()
     {
-        Schema::create('member_email', function (Blueprint $table) {
+        Schema::create('member_phone', function (Blueprint $table) {
             $table->bigInteger('member_id')->unsigned();
-            $table->primary('member_id');
-            $table->string('email', 100)->unique()->nullable(false);
+            $table->string('phone', 15);
+            $table->primary(['member_id', 'phone']);
             $table->foreign('member_id')
-                ->references('member_id')->on('member')
+                ->references('member_id')
+                ->on('member')
                 ->onDelete('cascade');
         });
     }
@@ -30,6 +31,6 @@ class CreateMemberEmailTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('member_email');
+        Schema::drop('member_phone');
     }
 }

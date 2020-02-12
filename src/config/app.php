@@ -166,6 +166,7 @@ return [
          * Package Service Providers...
          */
         Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class,
+        Propaganistas\LaravelPhone\PhoneServiceProvider::class,
 
         /*
          * Application Service Providers...

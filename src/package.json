@@ -21,7 +21,8 @@
         "vue-template-compiler": "^2.6.11"
     },
     "dependencies": {
-        "bootstrap": "^4.4.1",
-        "bootstrap-vue": "^2.3.0"
+        "vue-mc": "^0.6.0",
+        "vue-toasted": "^1.1.27",
+        "vuetify": "^2.2.11"
     }
 }

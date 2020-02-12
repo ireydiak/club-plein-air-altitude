@@ -76,20 +76,23 @@ class MemberTableGateway extends BaseGateway {
      * @param string|null $email
      * @param string|null $facebook
      * @param string|null $university
+     * @param string|null $phone
      * @return array
      * @throws DBALException
      */
     public function create(string $firstName, string $lastName, string $password, bool $isPermanent = false,
-                           bool $isAdmin = false, string $email = null, string $facebook = null, string $university = null): array {
+                           bool $isAdmin = false, string $email = null, string $facebook = null, string $university = null,
+                            string $phone = null): array {
         $query = "CALL create_member(
                     @member_first_name   := :first_name,
                     @member_last_name    := :last_name,
                     @member_email        := :email,
                     @member_password     := :password,
-                    @member_cip		   := :university,
+                    @member_cip		     := :university,
                     @member_facebook     := :facebook,
-                    @is_permanent 	   := :is_permanent,
-                    @is_admin          := :is_admin
+                    @is_permanent 	     := :is_permanent,
+                    @is_admin            := :is_admin,
+                    @member_phone        := :phone
                 )";
 
         $bindings = array(
@@ -101,6 +104,7 @@ class MemberTableGateway extends BaseGateway {
             new PDOBinding('university', $university, ParameterType::STRING),
             new PDOBinding('is_permanent', $isPermanent, ParameterType::BOOLEAN),
             new PDOBinding('is_admin', $isAdmin, ParameterType::BOOLEAN),
+            new PDOBinding('phone', $phone, ParameterType::STRING)
         );
 
         $this->prepareStatement($this->createStmt, $query, $bindings);
@@ -126,7 +130,8 @@ class MemberTableGateway extends BaseGateway {
      * @throws DBALException
      */
     public function update(int $memberId, string $firstName, string $lastName, string $password, bool $isPermanent = false,
-                           bool $isAdmin = false, string $email = null, string $facebook = null, string $university = null): array {
+                           bool $isAdmin = false, string $email = null, string $facebook = null, string $university = null,
+                           string $phone = null): array {
 
         $statement = "CALL update_member(
                 @member_uid		     := :member_id,
@@ -137,7 +142,8 @@ class MemberTableGateway extends BaseGateway {
 				@member_cip	         := :cip,
 				@member_facebook     := :facebook,
 				@is_permanent 	     := :is_permanent,
-				@is_admin            := :is_admin
+				@is_admin            := :is_admin,
+				@member_phone        := :phone
 			)";
 
         $bindings = array(
@@ -150,6 +156,7 @@ class MemberTableGateway extends BaseGateway {
             new PDOBinding('cip', $university, ParameterType::STRING),
             new PDOBinding('is_permanent', $isPermanent, ParameterType::BOOLEAN),
             new PDOBinding('is_admin', $isAdmin, ParameterType::BOOLEAN),
+            new PDOBinding('phone', $phone, ParameterType::STRING)
 
         );
 

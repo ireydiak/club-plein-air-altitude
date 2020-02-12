@@ -16,12 +16,15 @@ class CreateMemberView extends Migration {
             DB::unprepared("
                 DROP VIEW IF EXISTS member_view;
                 CREATE VIEW member_view AS
-                SELECT DISTINCT member_id, first_name, last_name, password, created_at, updated_at, email, facebook_link, cip,
-                                EXISTS(SELECT member_id FROM admin NATURAL JOIN member) AS is_admin,
-                                EXISTS(SELECT member_id FROM permanent NATURAL JOIN member) AS is_permanent
-                FROM member LEFT JOIN member_email      USING(member_id)
-                            LEFT JOIN member_facebook   USING(member_id)
+                SELECT DISTINCT member_id, first_name, last_name, email, password, created_at, updated_at, facebook_link,
+                    cip, phone,
+                    IF(admin.member_id     IS NULL, 0, 1) AS is_admin,
+                    IF(permanent.member_id IS NULL, 0, 1) AS is_permanent
+                FROM member LEFT JOIN member_facebook   USING(member_id)
                             LEFT JOIN member_university USING(member_id)
+                            LEFT JOIN member_phone      USING(member_id)
+                            LEFT JOIN admin             USING(member_id)
+                            LEFT JOIN permanent         USING(member_id)
                 ;
             ");
         });

@@ -1,40 +1,105 @@
 <template>
-    <div>
-        <b-form @submit.prevent="submit">
-            <b-form-group
-                v-for="(field, value) in model"
-                :label-for="value"
-                :label="field.label">
-                <b-form-checkbox
-                    v-model="fields[value]"
-                    v-if="field.type === 'checkbox'"
-                    :value="value">
-                </b-form-checkbox>
-                <b-form-input
-                    v-else
-                    v-model="fields[value]"
-                    :id="value"
-                    :type="field.type"
-                    :name="value"
-                    :required="false"
-                    v-bind:class="{ 'is-invalid':errors[value] && errors[value].length > 0 }"
-                />
-                <div
-                    class="invalid-feedback"
-                    v-if="errors[value] && errors[value].length"
-                    v-for="message in errors[value]"
+
+    <v-form ref="form" v-model="valid">
+        <v-layout wrap>
+            <v-flex xs12>
+                <h3>Informations personnelles</h3>
+            </v-flex>
+            <v-flex xs12 sm12 >
+                <v-text-field
+                    v-model="memberModel.firstName"
+                    label="Prénom"
+                    :error-messages="errors.firstName"
                 >
-                    {{ message }}
-                </div>
-            </b-form-group>
+                </v-text-field>
+            </v-flex>
+            <v-flex xs12 sm12 >
+                <v-text-field
+                    v-model="memberModel.lastName"
+                    label="Nom de famille"
+                    :error-messages="errors.lastName"
+                >
+                </v-text-field>
+            </v-flex>
+            <v-flex xs12 sm12 >
+                <v-text-field
+                    v-model="memberModel.email"
+                    label="Email"
+                    :error-messages="errors.email"
+                >
+                </v-text-field>
+            </v-flex>
+            <v-flex xs12 sm12 >
+                <v-select
+                    v-model="memberModel.role"
+                    label="Rôle"
+                    :items="memberModel.availableRoles()"
+                    :error-messages="errors.role"
+                >
+                </v-select>
+            </v-flex>
+            <v-flex xs12>
+                <h3>Informations de contact</h3>
+            </v-flex>
+            <v-flex xs12 sm12 >
+                <v-text-field
+                    v-model="memberModel.phone"
+                    :error-messages="errors.phone"
+                >
+                    <template v-slot:label>
+                        <div>
+                            Numéro de téléphone <small>(optionnel)</small>
+                        </div>
+                    </template>
+                </v-text-field>
+            </v-flex>
+            <v-flex xs12 sm12 >
+                <v-text-field
+                    v-model="memberModel.cip"
+                    :error-messages="errors.cip"
+                >
+                    <template v-slot:label>
+                        <div>
+                            CIP <small>(optionnel)</small>
+                        </div>
+                    </template>
+                </v-text-field>
+            </v-flex>
+            <v-flex xs12 sm12 >
+                <v-text-field
+                    v-model="memberModel.facebookLink"
+                    :error-messages="errors.facebookLink"
+                >
+                    <template v-slot:label>
+                        <div>
+                            Facebook <small>(optionnel)</small>
+                        </div>
+                    </template>
+                </v-text-field>
+            </v-flex>
+        </v-layout>
 
-            <b-button type="submit" variant="primary">{{ buttonText }}</b-button>
-        </b-form>
-    </div>
-
+        <slot name="footer"></slot>
+<!--        <v-row>-->
+<!--            <v-col-->
+<!--                class="d-flex"-->
+<!--                cols="12"-->
+<!--                md="4"-->
+<!--                sm="12"-->
+<!--            >-->
+<!--                <v-btn-->
+<!--                    color="success"-->
+<!--                    @click="submit">-->
+<!--                    {{ buttonText }}-->
+<!--                </v-btn>-->
+<!--            </v-col>-->
+<!--        </v-row>-->
+    </v-form>
 </template>
 
 <script>
+    import {MemberModel} from './Member/MemberModel';
+
     export default {
         name: "UserFormComponent",
 
@@ -42,7 +107,8 @@
             model: Object,
             member: Object,
             method: String,
-            buttonText: String
+            buttonText: String,
+            title: String
         },
 
         computed: {
@@ -55,30 +121,22 @@
 
         data() {
             return {
+                valid: false,
                 errors: {},
-                fields: {
-                    email: null,
-                    firstName: null,
-                    lastName: null,
-                    password: null,
-                    facebookLink: null,
-                    cip: null,
-                    isPermanent: false,
-                    isAdmin: false
-                }
+                memberModel: new MemberModel(),
             }
         },
 
         methods: {
 
             submit() {
-                this.resetErrors();
-
-                if (this.method === 'update') {
-                    this.fields._method = 'PUT';
-                }
-                console.log(this.fields);
-                this.$submit(this.url, this.fields, this);
+                this.$submitModel(this.memberModel, this);
+                // this.memberModel.save().then((response) => {
+                //     console.log(response);
+                // }).catch((error) => {
+                //     console.log(error);
+                //     this.errors = error.errors;
+                // });
             },
 
             resetErrors() {
@@ -86,19 +144,9 @@
             }
         },
 
-        created() {
-            for (const key in this.fields) {
-                this.errors[key] = [];
-            }
-        },
-
         mounted() {
             if (this.member) {
-                for (const key in this.member) {
-                    if (this.fields.hasOwnProperty(key)) {
-                        this.fields[key] = this.member[key];
-                    }
-                }
+                this.memberModel = new MemberModel(this.member);
             }
         }
 

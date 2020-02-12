@@ -1,8 +1,6 @@
 export default {
-    Routes: {
-        members: {
-            'store': '/members',
-            'update': '/members/{id}'
-        }
+    members: {
+        'store': '/members',
+        'update': '/members/{id}'
     }
 }

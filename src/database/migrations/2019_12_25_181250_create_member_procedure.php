@@ -49,12 +49,13 @@ class CreateMemberProcedure extends Migration
                     member_password     VARCHAR(555),
                     member_cip          CHAR(8),
                     member_facebook     VARCHAR(255),
-                    is_permanent      BOOLEAN,
-                    is_admin          BOOLEAN
+                    is_permanent        BOOLEAN,
+                    is_admin            BOOLEAN,
+                    phone               VARCHAR(15)
                 )
                 BEGIN
-                    INSERT INTO member (member_id, first_name, last_name, password, created_at, updated_at)
-                    VALUES (NULL, member_first_name, member_last_name, member_password, NOW(), NOW())
+                    INSERT INTO member (member_id, first_name, last_name, email, password, created_at, updated_at)
+                    VALUES (NULL, member_first_name, member_last_name, member_email, member_password, NOW(), NOW())
                     ;
 
                     SET @member_uid = (
@@ -62,7 +63,7 @@ class CreateMemberProcedure extends Migration
                     )
                     ;
 
-                    CALL update_member_contact(@member_uid, member_cip, member_email, member_facebook);
+                    CALL update_member_contact(@member_uid, member_cip, member_facebook, phone);
                     CALL update_member_privileges(@member_uid, is_permanent, is_admin);
 
                     SELECT * FROM member_view WHERE member_id = @member_uid;
@@ -75,10 +76,10 @@ class CreateMemberProcedure extends Migration
         DB::unprepared("
             DROP PROCEDURE IF EXISTS update_member_contact;
             CREATE PROCEDURE update_member_contact(
-                member_uid      BIGINT,
-                member_cip       CHAR(8),
-                member_email     VARCHAR(255),
-                member_facebook  VARCHAR(255)
+                member_uid              BIGINT,
+                member_cip              CHAR(8),
+                member_facebook         VARCHAR(255),
+                member_phone_number     VARCHAR(15)
             )
             BEGIN
                 IF member_cip IS NOT NULL AND member_cip <> ''
@@ -90,13 +91,12 @@ class CreateMemberProcedure extends Migration
                     END IF;
                 END IF;
 
-                IF member_email IS NOT NULL AND member_email <> ''
+                IF member_phone_number IS NOT NULL AND member_phone_number <> ''
                 THEN
-                    IF NOT EXISTS(SELECT member_id FROM member_email WHERE member_id = member_uid)
-                    THEN
-                        INSERT INTO member_email (member_id, email) VALUES (member_uid, member_email);
+                    IF NOT EXISTS (SELECT member_id FROM member_phone WHERE member_id = member_uid) THEN
+                        INSERT INTO member_phone (member_id, phone) VALUES (member_uid, member_phone_number);
                     ELSE
-                        UPDATE member_email SET email = member_email WHERE member_id = member_uid;
+                        UPDATE member_phone SET phone = member_phone_number WHERE member_id = member_uid;
                     END IF;
                 END IF;
 
@@ -123,12 +123,12 @@ class CreateMemberProcedure extends Migration
             )
             BEGIN
                 IF is_permanent IS TRUE THEN
-                    INSERT INTO permanent (member_id) VALUES(member_uid);
+                    INSERT IGNORE INTO permanent (member_id) VALUES(member_uid);
                 ELSE
                     DELETE FROM permanent WHERE member_id = member_uid;
                 END IF;
                 IF is_admin IS TRUE THEN
-                    INSERT INTO admin (member_id) VALUES(member_uid);
+                    INSERT IGNORE INTO admin (member_id) VALUES(member_uid);
                 ELSE
                     DELETE FROM admin WHERE member_id = member_uid;
                 END IF;
@@ -148,14 +148,19 @@ class CreateMemberProcedure extends Migration
                 member_cip          CHAR(8),
                 member_facebook     VARCHAR(255),
                 is_permanent        BOOLEAN,
-                is_admin            BOOLEAN
+                is_admin            BOOLEAN,
+                member_phone        VARCHAR(15)
             )
             BEGIN
                 UPDATE member
-                SET first_name = member_first_name, last_name = member_last_name, password = member_password, updated_at = NOW()
+                    SET first_name = member_first_name,
+                        last_name = member_last_name,
+                        password = member_password,
+                        email = member_email,
+                        updated_at = NOW()
                 WHERE member_id = member_uid;
 
-                CALL update_member_contact(member_uid, member_cip, member_email, member_facebook);
+                CALL update_member_contact(member_uid, member_cip, member_facebook, member_phone);
                 CALL update_member_privileges(member_uid, is_permanent, is_admin);
 
                 SELECT * FROM member_view WHERE member_id = member_uid;

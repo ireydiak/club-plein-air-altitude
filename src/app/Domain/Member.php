@@ -2,8 +2,7 @@
 
 namespace App\Domain;
 
-class Member extends BaseDomain
-{
+class Member extends BaseDomain {
     /**
      * @var int
      */
@@ -43,27 +42,49 @@ class Member extends BaseDomain
     public $email;
 
     /**
-     * @var int
+     * Date de création du membre
+     *
+     * @var string
      */
-    public const REGULAR_ROLE = 0;
+    public $created_at;
+
+    /**
+     * Date de modification du membre
+     *
+     * @var  string
+     */
+    public $updated_at;
+
+    /**
+     * Numéro de téléphone du membre
+     *
+     * @var string
+     */
+    public $phone;
+
+    /**
+     * @var string
+     */
+    public $role;
 
     /**
      * @var int
      */
-    public const PERMANENT_ROLE = 1;
+    public const REGULAR_ROLE = 'Membre';
 
     /**
      * @var int
      */
-    public const ADMIN_ROLE = 2;
+    public const PERMANENT_ROLE = 'Permanent';
 
     /**
      * @var int
      */
-    protected $role;
+    public const ADMIN_ROLE = 'Admin';
 
     public function __construct(array $attributes) {
         $this->fill($attributes);
+        $this->setRole($attributes['is_admin'] + $attributes['is_permanent']);
         $this->role = $this->role ?? self::REGULAR_ROLE;
     }
 
@@ -89,15 +110,26 @@ class Member extends BaseDomain
         if (!$other instanceof Member) {
             return false;
         }
-        return $this->firstName    == $other->firstName &&
-            $this->lastName        == $other->lastName &&
-            $this->email           == $other->email &&
-            $this->facebookLink    == $other->facebookLink &&
-            $this->role            == $other->role;
+
+        return $this->firstName == $other->firstName &&
+            $this->lastName == $other->lastName &&
+            $this->email == $other->email;
     }
 
     public function setRole(int $role) {
-        $this->role = $role;
+        switch ($role) {
+            case 0:
+                $this->role = self::REGULAR_ROLE;
+                break;
+            case 1:
+                $this->role = self::PERMANENT_ROLE;
+                break;
+            case 2:
+                $this->role = self::ADMIN_ROLE;
+                break;
+            default:
+                $this->role = self::REGULAR_ROLE;
+        }
     }
 
     public function isAdmin() {
@@ -106,52 +138,6 @@ class Member extends BaseDomain
 
     public function isPermanent() {
         return $this->role >= self::PERMANENT_ROLE;
-    }
-
-    public static function form(): array
-    {
-        return [
-            'firstName' => [
-                'label' => 'Prénom',
-                'type' => 'text',
-                'required' => true
-            ],
-            'lastName' => [
-                'label' => 'Nom',
-                'type' => 'text',
-                'required' => true
-            ],
-            'password' => [
-                'label' => 'Password',
-                'type' => 'password',
-                'required' => true
-            ],
-            'email' => [
-                'label' => 'Email',
-                'type' => 'text',
-                'required' => false
-            ],
-            'facebookLink' => [
-                'label' => 'Facebook',
-                'required' => false,
-                'type' => 'text'
-            ],
-            'cip' => [
-                'label' => 'CIP',
-                'type' => 'text',
-                'required' => false
-            ],
-            'isPermanent' => [
-                'label' => 'Est un permanent',
-                'type' => 'checkbox',
-                'required' => false
-            ],
-            'isAdmin' => [
-                'label' => 'Est un administrateur',
-                'type' => 'checkbox',
-                'required' => false
-            ]
-        ];
     }
 
 }

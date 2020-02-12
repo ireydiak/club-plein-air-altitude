@@ -16,7 +16,7 @@ class CreateMemberUniversityTable extends Migration
         Schema::create('member_university', function (Blueprint $table) {
             $table->bigInteger('member_id')->unsigned();
             $table->primary('member_id');
-            $table->char('cip', 8)->unique()->nullable(false);
+            $table->char('cip', 8)->unique();
             $table->foreign('member_id')
                 ->references('member_id')->on('member')
                 ->onDelete('cascade');

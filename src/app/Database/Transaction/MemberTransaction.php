@@ -77,7 +77,8 @@ class MemberTransaction
                 $attributes['isAdmin'],
                 $attributes['email'],
                 $attributes['facebookLink'],
-                $attributes['cip']
+                $attributes['cip'],
+                $attributes['phone']
             );
 
             $this->conn->commit();
