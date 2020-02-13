@@ -93,4 +93,14 @@ class MemberTransaction
             }
         }
     }
+
+    public function destroy($id): bool {
+        $this->conn->beginTransaction();
+
+        $result = $this->mtg->delete($id);
+
+        $this->conn->commit();
+
+        return $result;
+    }
 }

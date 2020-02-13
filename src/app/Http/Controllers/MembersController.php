@@ -64,14 +64,10 @@ class MembersController extends Controller
         $validated = $request->validated();
 
         try {
-            $validated['isPermanent'] = ($validated['role'] !== 'Membre');
-            $validated['isAdmin'] = ($validated['role'] === 'Admin');
-            $validated['password'] = (isset($validated['password']) ? $validated['password'] : $validated['email']);
-            if (isset($validated['phone']) && !empty($validated['phone'])) {
-                $validated['phone'] = PhoneNumber::make($validated['phone'])->ofCountry($validated['phoneRegion'])->formatE164();
-            }
+            $this->parseRequest($validated);
+
             if (($attributes = $this->transaction->create($validated)) !== null) {
-                return response()->json(['message' => 'Membre ajouté avec succès', 'user' => new Member($attributes)]);
+                return response()->json(['message' => 'Membre ajouté avec succès', 'member' => new Member($attributes)]);
             } else {
                 return response()->json(['message' => 'Erreur dans l\'ajout du membre.'], 422);
             }
@@ -97,7 +93,7 @@ class MembersController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function edit($id)
     {
@@ -115,16 +111,17 @@ class MembersController extends Controller
      *
      * @param Request $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function update(Request $request, $id)
     {
         if (($member = $this->transaction->findById($id)) !== null) {
-            $attributes = $request->all();
-            $attributes['isPermanent'] = ($request->input('role') !== 'Membre');
-            $attributes['isAdmin'] = ($request->input('role') === 'Admin');
-            $this->transaction->update($id, $attributes);
-            return response()->json(['message' => 'Member modifié avec succès', 'member' => $member]);
+            $validated = $request->all();
+
+            $this->parseRequest($validated);
+
+            $member = $this->transaction->update($id, $validated);
+            return response()->json(['message' => 'Membre modifié avec succès', 'member' => $member]);
         }
 
         return response()->json(['message' => 'Le membre n\'existe pas', 'errors' => []], 422);
@@ -134,11 +131,19 @@ class MembersController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function destroy($id)
     {
-        return response('unimplemented');
+        $code = 422;
+        $message = 'Échec dans la suppression du membre';
+
+        if ($this->transaction->destroy($id)) {
+            $message = 'Membre supprimé avec succès';
+            $code = 200;
+        }
+
+        return response()->json(['message' => $message], $code);
     }
 
     public function importCSV() {
@@ -171,6 +176,15 @@ class MembersController extends Controller
                 $row += 1;
             }
             fclose($handle);
+        }
+    }
+
+    private function parseRequest(&$attributes) {
+        $attributes['isPermanent'] = ($attributes['role'] !== 'Membre');
+        $attributes['isAdmin'] = ($attributes['role'] === 'Admin');
+        $attributes['password'] = (isset($attributes['password']) ? $attributes['password'] : $attributes['email']);
+        if (isset($attributes['phone']) && !empty($attributes['phone'])) {
+            $attributes['phone'] = PhoneNumber::make($attributes['phone'])->ofCountry($attributes['phoneRegion'])->formatE164();
         }
     }
 }

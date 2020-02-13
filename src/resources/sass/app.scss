@@ -1,2 +1,12 @@
 //
 @import '~vuetify/dist/vuetify.min.css';
+
+$body-bg: #E4E7ED;
+
+body {
+    background-color: $body-bg;
+}
+
+.theme--light.v-application {
+    background-color: $body-bg;
+}

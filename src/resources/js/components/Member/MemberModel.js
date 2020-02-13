@@ -6,6 +6,9 @@ export class MemberModel extends Model {
     options() {
         return {
             identifier: 'member_id',
+            methods: {
+                update: 'PUT'
+            }
         }
     };
 
@@ -30,10 +33,22 @@ export class MemberModel extends Model {
 
     routes() {
         return {
-            fetch: '/member/{id}',
-            save: '/members'
+            fetch: '/members/{memberId}',
+            save: '/members',
+            update: '/members/{memberId}',
+            delete: '/members/{memberId}'
         }
     };
+
+    update() {
+        let url = this.getRoute('update').replace(/\{memberId\}/, this.memberId);
+
+        axios.put(url, this.toJSON()).then(response => {
+            return response.data;
+        }).catch(error => {
+            console.log(error);
+        });
+    }
 
     validation() {
         return {

@@ -5,7 +5,7 @@
             <v-flex xs12>
                 <h3>Informations personnelles</h3>
             </v-flex>
-            <v-flex xs12 sm12 >
+            <v-flex xs12 sm12>
                 <v-text-field
                     v-model="memberModel.firstName"
                     label="Prénom"
@@ -13,7 +13,7 @@
                 >
                 </v-text-field>
             </v-flex>
-            <v-flex xs12 sm12 >
+            <v-flex xs12 sm12>
                 <v-text-field
                     v-model="memberModel.lastName"
                     label="Nom de famille"
@@ -21,7 +21,7 @@
                 >
                 </v-text-field>
             </v-flex>
-            <v-flex xs12 sm12 >
+            <v-flex xs12 sm12>
                 <v-text-field
                     v-model="memberModel.email"
                     label="Email"
@@ -29,7 +29,7 @@
                 >
                 </v-text-field>
             </v-flex>
-            <v-flex xs12 sm12 >
+            <v-flex xs12 sm12>
                 <v-select
                     v-model="memberModel.role"
                     label="Rôle"
@@ -41,7 +41,7 @@
             <v-flex xs12>
                 <h3>Informations de contact</h3>
             </v-flex>
-            <v-flex xs12 sm12 >
+            <v-flex xs12 sm12>
                 <v-text-field
                     v-model="memberModel.phone"
                     :error-messages="errors.phone"
@@ -53,7 +53,7 @@
                     </template>
                 </v-text-field>
             </v-flex>
-            <v-flex xs12 sm12 >
+            <v-flex xs12 sm12>
                 <v-text-field
                     v-model="memberModel.cip"
                     :error-messages="errors.cip"
@@ -65,7 +65,7 @@
                     </template>
                 </v-text-field>
             </v-flex>
-            <v-flex xs12 sm12 >
+            <v-flex xs12 sm12>
                 <v-text-field
                     v-model="memberModel.facebookLink"
                     :error-messages="errors.facebookLink"
@@ -79,21 +79,20 @@
             </v-flex>
         </v-layout>
 
-        <slot name="footer"></slot>
-<!--        <v-row>-->
-<!--            <v-col-->
-<!--                class="d-flex"-->
-<!--                cols="12"-->
-<!--                md="4"-->
-<!--                sm="12"-->
-<!--            >-->
-<!--                <v-btn-->
-<!--                    color="success"-->
-<!--                    @click="submit">-->
-<!--                    {{ buttonText }}-->
-<!--                </v-btn>-->
-<!--            </v-col>-->
-<!--        </v-row>-->
+        <v-row>
+            <v-col
+                class="d-flex"
+                cols="12"
+                md="4"
+                sm="12"
+            >
+                <v-btn
+                    color="success"
+                    @click="submit">
+                    {{ buttonText }}
+                </v-btn>
+            </v-col>
+        </v-row>
     </v-form>
 </template>
 
@@ -104,19 +103,9 @@
         name: "UserFormComponent",
 
         props: {
-            model: Object,
             member: Object,
-            method: String,
             buttonText: String,
             title: String
-        },
-
-        computed: {
-            url() {
-                return this.method === 'store' ?
-                    this.$router.members.store :
-                    this.$router.members.update.replace('{id}', this.member.memberId);
-            }
         },
 
         data() {
@@ -129,14 +118,21 @@
 
         methods: {
 
+            setMember(member) {
+                if (member) {
+                    this.memberModel = new MemberModel(member);
+                    this.memberModel.saving = true;
+                }
+            },
+
+            update() {
+                this.$updateModel(this.memberModel, this).then(member => {
+                    this.$eventBus.$emit('member-updated', member);
+                });
+            },
+
             submit() {
                 this.$submitModel(this.memberModel, this);
-                // this.memberModel.save().then((response) => {
-                //     console.log(response);
-                // }).catch((error) => {
-                //     console.log(error);
-                //     this.errors = error.errors;
-                // });
             },
 
             resetErrors() {
@@ -145,14 +141,8 @@
         },
 
         mounted() {
-            if (this.member) {
-                this.memberModel = new MemberModel(this.member);
-            }
-        }
+            this.setMember(this.member);
+        },
 
     }
 </script>
-
-<style scoped>
-
-</style>

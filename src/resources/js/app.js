@@ -44,17 +44,12 @@ new Vue({
     vuetify
 }).$mount("#app");
 
-
-Vue.prototype.$eventBus.$on('flash-message', (message, type) => {
-    console.log(message);
-});
-
-Vue.toasted.register('api_error', (payload) => {
-    if (!payload.message) {
+Vue.toasted.register('api_error', (message) => {
+    if (!message) {
         return 'Erreur serveur';
     }
 
-    return payload.message;
+    return message;
 }, {
     type: 'error',
     position: 'top-right',
@@ -62,12 +57,13 @@ Vue.toasted.register('api_error', (payload) => {
     duration: 5000
 });
 
-Vue.toasted.register('api_success', (payload) => {
-    if (!payload.message) {
+Vue.toasted.register('api_success', (message) => {
+
+    if (!message) {
         return 'Succès';
     }
 
-    return payload.message;
+    return message;
 }, {
     type: 'success',
     position: 'top-right',
@@ -75,20 +71,17 @@ Vue.toasted.register('api_success', (payload) => {
     duration: 5000
 });
 
-Vue.prototype.$submitModel = function(model, context, successCallback, errorCallback) {
-    model.save().then((response) => {
+Vue.prototype.$updateModel = function(model, context, successCallback, errorCallback) {
+    return model.update().then(response => {
         console.log(response);
+
         context.$toasted.global.api_success(response.data.message);
 
-        model.reset();
-
-        if (successCallback) {
-            successCallback(response);
-        }
-    }).catch((error) => {
+        return response.data.member;
+    }).catch(error => {
         console.error(error);
 
-        let message = error.body || error.message || '';
+        let message = error.body || error.message || error.data.message || '';
 
         context.$toasted.global.api_error(message);
 
@@ -102,26 +95,32 @@ Vue.prototype.$submitModel = function(model, context, successCallback, errorCall
     });
 };
 
-Vue.prototype.$submit = function(url, data, context, successCallback, errorCallback) {
-    context.$http.post(url, data).then(response => {
-        context.$toasted.global.api_success(response.body);
+Vue.prototype.$submitModel = function(model, context, successCallback, errorCallback) {
+    axios.post('/members', model.toJSON()).then((response) => {
+        context.$toasted.global.api_success(response.message);
 
-        console.log(response);
+        model.reset();
 
         if (successCallback) {
             successCallback(response);
         }
-    }).catch(error => {
-        console.error(error);
-        let message = error.body || error.message || '';
 
+        return response.data.member;
+    }).catch((error) => {
+        console.error(error.response);
+
+        let message = error.body || error.response.data.message ||  '';
+        let errors = error.response.data.errors || {};
 
         context.$toasted.global.api_error(message);
 
-        context.errors = error.body.errors;
+        if (context.errors) {
+            context.errors = errors;
+        }
 
         if (errorCallback) {
             errorCallback(error);
         }
     });
 };
+

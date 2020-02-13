@@ -56,7 +56,7 @@
                 </div>
             </v-list>
         </v-navigation-drawer>
-        <v-app-bar app color="indigo" dark>
+        <v-app-bar app color="primary" dark>
             <v-app-bar-nav-icon @click.stop="mini = !mini"/>
             <v-toolbar-title>Club de plein air altitude</v-toolbar-title>
         </v-app-bar>
