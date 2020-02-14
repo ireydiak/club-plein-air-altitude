@@ -33,7 +33,10 @@
                 <v-select
                     v-model="memberModel.role"
                     label="Rôle"
-                    :items="memberModel.availableRoles()"
+                    key="role_id"
+                    :items="roles"
+                    item-text="name"
+                    item-value="role_id"
                     :error-messages="errors.role"
                 >
                 </v-select>
@@ -105,7 +108,8 @@
         props: {
             member: Object,
             buttonText: String,
-            title: String
+            title: String,
+            roles: Array
         },
 
         data() {
@@ -121,7 +125,6 @@
             setMember(member) {
                 if (member) {
                     this.memberModel = new MemberModel(member);
-                    this.memberModel.saving = true;
                 }
             },
 

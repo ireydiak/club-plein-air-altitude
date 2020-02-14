@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Database\Transaction\MemberTransaction;
 use App\Domain\Member;
 use App\Http\Requests\UserStoreRequest;
+use DB;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\DriverManager;
@@ -23,7 +24,7 @@ class MembersController extends Controller
             'dbname' => 'statut',
             'user' => 'statut',
             'password' => 'statut',
-            'host' => '172.30.0.4',
+            'host' => '172.30.0.2',
             'driver' => 'pdo_mysql',
         );
 
@@ -37,9 +38,11 @@ class MembersController extends Controller
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index()
+
     {
         return view('members/index', [
-            'members' => $this->transaction->all()
+            'members'   => DB::table('active_member_view')->get()->map(function($row) { return new Member($row); }),
+            'roles'     => DB::table('role')->get()
         ]);
     }
 
@@ -50,7 +53,9 @@ class MembersController extends Controller
      */
     public function create()
     {
-        return view('members/create');
+        return view('members/create', [
+            'roles' => DB::table('role')->get()
+        ]);
     }
 
     /**
@@ -165,6 +170,7 @@ class MembersController extends Controller
                             'lastName' => $lastName,
                             'cip' => (preg_match('/[a-z]{4}[0-9]{4}/', $cip) ? $cip : null) ,
                             'password' => app('hash')->make($phoneNumber) ?? app('hash')->make('default'),
+                            'role' => DB::table('role')->where('name', 'Membre')->first()->role_id,
                             'facebookLink' => null,
                             'email' => (!empty($email) ? $email : sprintf('%s.%s@usherbrooke.ca',$firstName, $lastName)),
                             'phone' => $phoneNumber,
@@ -180,8 +186,6 @@ class MembersController extends Controller
     }
 
     private function parseRequest(&$attributes) {
-        $attributes['isPermanent'] = ($attributes['role'] !== 'Membre');
-        $attributes['isAdmin'] = ($attributes['role'] === 'Admin');
         $attributes['password'] = (isset($attributes['password']) ? $attributes['password'] : $attributes['email']);
         if (isset($attributes['phone']) && !empty($attributes['phone'])) {
             $attributes['phone'] = PhoneNumber::make($attributes['phone'])->ofCountry($attributes['phoneRegion'])->formatE164();

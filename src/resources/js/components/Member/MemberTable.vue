@@ -71,7 +71,9 @@
                                                                     <v-select
                                                                         v-model="editedMember.role"
                                                                         label="Rôle"
-                                                                        :items="availableRoles"
+                                                                        :items="roles"
+                                                                        item-value="role_id"
+                                                                        item-text="name"
                                                                         :error-messages="errors.role"
                                                                     >
                                                                     </v-select>
@@ -133,6 +135,55 @@
                                 </v-toolbar>
 
                             </template>
+                            <template v-slot:item.isActive="{ item }">
+                                <v-icon medium color="green" v-if="item.isActive">
+                                    mdi-card-bulleted
+                                </v-icon>
+                                <v-icon medium color="red" v-else>
+                                    mdi-card-bulleted-off
+                                </v-icon>
+                            </template>
+                            <template v-slot:item.contact="{ item }">
+                                <v-expansion-panels flat inset>
+                                    <v-expansion-panel>
+                                        <v-expansion-panel-header>{{ item.email }}</v-expansion-panel-header>
+                                        <v-expansion-panel-content>
+                                            <v-list dense>
+                                                <v-list-item-group v-model="item" color="primary">
+                                                    <v-list-item>
+                                                        <v-list-item-icon>
+                                                            <v-icon v-text="email">mdi-email</v-icon>
+                                                        </v-list-item-icon>
+                                                        <v-list-item-content>
+                                                            <v-list-item-title :v-text="item.email">{{item.email}}
+                                                            </v-list-item-title>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+                                                    <v-list-item>
+                                                        <v-list-item-icon>
+                                                            <v-icon v-text="phone">mdi-phone</v-icon>
+                                                        </v-list-item-icon>
+                                                        <v-list-item-content>
+                                                            <v-list-item-title :v-text="item.phone">{{item.phone}}
+                                                            </v-list-item-title>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+                                                    <v-list-item>
+                                                        <v-list-item-icon>
+                                                            <v-icon v-text="facebook">mdi-facebook</v-icon>
+                                                        </v-list-item-icon>
+                                                        <v-list-item-content>
+                                                            <v-list-item-title :v-text="item.facebookLink">
+                                                                {{item.facebookLink}}
+                                                            </v-list-item-title>
+                                                        </v-list-item-content>
+                                                    </v-list-item>
+                                                </v-list-item-group>
+                                            </v-list>
+                                        </v-expansion-panel-content>
+                                    </v-expansion-panel>
+                                </v-expansion-panels>
+                            </template>
                             <template v-slot:item.action="{ item }">
                                 <v-icon
                                     small
@@ -166,25 +217,24 @@
         name: "MemberTable",
         components: {UserFormComponent},
         props: {
-            users: Array
+            users: Array,
+            roles: Array
         },
 
         data: () => {
             return {
-                availableRoles: [],
                 dialog: false,
                 errors: {},
                 editedMember: {},
                 headers: [
                     {text: 'Prénom', value: 'firstName', sortable: true, filterable: true},
                     {text: 'Nom', value: 'lastName', sortable: true, filterable: true},
-                    {text: 'Email', value: 'email'},
-                    {text: 'Téléphone', value: 'phone', sortable: false},
+                    {text: 'Contact', value: 'contact', sortable: false},
                     {text: 'CIP', value: 'cip'},
-                    {text: 'Facebook', value: 'facebookLink'},
                     {text: 'Rôle', value: 'role', sortable: true},
                     {text: 'Date de création', value: 'created_at', sortable: true},
-                    {text: 'Actions', value: 'action', sortable: false}
+                    {text: 'Abonnement', value: 'isActive', filterable: true, sortable: false},
+                    {text: 'Actions', value: 'action', sortable: false},
                 ],
                 search: '',
                 valid: false,
@@ -248,10 +298,6 @@
                 }
             }
         },
-
-        mounted() {
-            this.availableRoles = (new MemberModel()).availableRoles();
-        }
     }
 </script>
 

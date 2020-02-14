@@ -1,5 +1,5 @@
 import {Model} from 'vue-mc';
-import {string, email, required} from "vue-mc/validation";
+import {string, email, required, integer} from "vue-mc/validation";
 
 export class MemberModel extends Model {
 
@@ -21,14 +21,10 @@ export class MemberModel extends Model {
             password: null,
             facebookLink: null,
             cip: null,
-            role: 'Membre',
+            role: null,
             phone: null,
             phoneRegion: 'CA'
         }
-    };
-
-    availableRoles() {
-        return ['Membre', 'Permanent', 'Admin'];
     };
 
     routes() {
@@ -52,6 +48,7 @@ export class MemberModel extends Model {
 
     validation() {
         return {
+            role: integer.and(required),
             firstName: string.and(required),
             lastName: string.and(required),
             email: email,

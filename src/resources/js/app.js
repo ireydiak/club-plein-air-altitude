@@ -97,7 +97,8 @@ Vue.prototype.$updateModel = function(model, context, successCallback, errorCall
 
 Vue.prototype.$submitModel = function(model, context, successCallback, errorCallback) {
     axios.post('/members', model.toJSON()).then((response) => {
-        context.$toasted.global.api_success(response.message);
+        console.log(response);
+        context.$toasted.global.api_success(response.data.message);
 
         model.reset();
 

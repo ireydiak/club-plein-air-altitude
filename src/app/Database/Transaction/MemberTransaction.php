@@ -46,8 +46,7 @@ class MemberTransaction
             $attributes['firstName'],
             $attributes['lastName'],
             $attributes['password'],
-            $attributes['isPermanent'],
-            $attributes['isAdmin'],
+            $attributes['role'],
             $attributes['email'],
             $attributes['facebookLink'],
             $attributes['cip']
@@ -73,8 +72,7 @@ class MemberTransaction
                 $attributes['firstName'],
                 $attributes['lastName'],
                 $attributes['password'],
-                $attributes['isPermanent'],
-                $attributes['isAdmin'],
+                $attributes['role'],
                 $attributes['email'],
                 $attributes['facebookLink'],
                 $attributes['cip'],
@@ -103,4 +101,5 @@ class MemberTransaction
 
         return $result;
     }
+
 }

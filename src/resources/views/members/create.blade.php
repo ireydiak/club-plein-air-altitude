@@ -13,7 +13,7 @@
                         <user-form-component
                             :member="null"
                             :button-text="'Créer'"
-                            :method="'store'"
+                            :roles="{{ $roles }}"
                             :title="'Ajouter un membre'"
                         ></user-form-component>
                     </v-card-text>

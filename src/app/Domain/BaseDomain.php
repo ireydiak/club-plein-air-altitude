@@ -20,14 +20,33 @@ class BaseDomain
      * Fills the instance's attributes from an associative array
      * Defaults to null if the value is not found in the array
      *
-     * @param array $attrs
+     * @param mixed $attrs
      */
-    protected function fill(array $attrs): void {
+    protected function fill($attrs): void {
         foreach (get_object_vars($this) as $key => $value) {
             $keyName = preg_replace_callback('/[A-Z]/', function($match) {
                 return '_' . strtolower($match[0]);
             }, $key);
-            $this->$key = isset($attrs[$keyName]) ? $attrs[$keyName] : NULL;
+            if (is_array($attrs)) {
+                $this->$key = isset($attrs[$keyName]) ? $attrs[$keyName] : NULL;
+            } else {
+                $this->$key = isset($attrs->$keyName) ? $attrs->$keyName : NULL;
+            }
+        }
+    }
+
+    /**
+     * Returns a default value if the key cannot be found in the given array|stdClass
+     * @param array|\stdClass $src
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    protected function defaultIfNotSet(&$src, string $key, $default) {
+        if (is_array($src)) {
+            return isset($src[$key]) ? $src[$key] : $default;
+        } else {
+            return isset($src->key) ? $src->key : $default;
         }
     }
 

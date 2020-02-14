@@ -71,8 +71,7 @@ class MemberTableGateway extends BaseGateway {
      * @param string $firstName @required
      * @param string $lastName @required
      * @param string $password @required
-     * @param bool $isPermanent
-     * @param bool $isAdmin
+     * @param int $role
      * @param string|null $email
      * @param string|null $facebook
      * @param string|null $university
@@ -80,9 +79,8 @@ class MemberTableGateway extends BaseGateway {
      * @return array
      * @throws DBALException
      */
-    public function create(string $firstName, string $lastName, string $password, bool $isPermanent = false,
-                           bool $isAdmin = false, string $email = null, string $facebook = null, string $university = null,
-                            string $phone = null): array {
+    public function create(string $firstName, string $lastName, string $password, int $role, string $email,
+                           string $facebook = null, string $university = null, string $phone = null): array {
         $query = "CALL create_member(
                     @member_first_name   := :first_name,
                     @member_last_name    := :last_name,
@@ -90,8 +88,7 @@ class MemberTableGateway extends BaseGateway {
                     @member_password     := :password,
                     @member_cip		     := :university,
                     @member_facebook     := :facebook,
-                    @is_permanent 	     := :is_permanent,
-                    @is_admin            := :is_admin,
+                    @member_role         := :role,
                     @member_phone        := :phone
                 )";
 
@@ -100,11 +97,10 @@ class MemberTableGateway extends BaseGateway {
             new PDOBinding('last_name', $lastName, ParameterType::STRING),
             new PDOBinding('email', $email, ParameterType::STRING),
             new PDOBinding('password', $password, ParameterType::STRING),
+            new PDOBinding('role', $role, ParameterType::INTEGER),
             new PDOBinding('facebook', $facebook, ParameterType::STRING),
             new PDOBinding('university', $university, ParameterType::STRING),
-            new PDOBinding('is_permanent', $isPermanent, ParameterType::BOOLEAN),
-            new PDOBinding('is_admin', $isAdmin, ParameterType::BOOLEAN),
-            new PDOBinding('phone', $phone, ParameterType::STRING)
+            new PDOBinding('phone', $phone, ParameterType::STRING),
         );
 
         $this->prepareStatement($this->createStmt, $query, $bindings);
@@ -120,18 +116,17 @@ class MemberTableGateway extends BaseGateway {
      * @param int $memberId
      * @param string $firstName
      * @param string $lastName
+     * @param int $role
      * @param string $password
-     * @param bool $isPermanent
-     * @param bool $isAdmin
      * @param string|null $email
      * @param string|null $facebook
      * @param string|null $university
+     * @param string|null $phone
      * @return array
      * @throws DBALException
      */
-    public function update(int $memberId, string $firstName, string $lastName, string $password, bool $isPermanent = false,
-                           bool $isAdmin = false, string $email = null, string $facebook = null, string $university = null,
-                           string $phone = null): array {
+    public function update(int $memberId, string $firstName, string $lastName, string $password, int $role,
+                           string $email, string $facebook = null, string $university = null, string $phone = null): array {
 
         $statement = "CALL update_member(
                 @member_uid		     := :member_id,
@@ -141,8 +136,7 @@ class MemberTableGateway extends BaseGateway {
 				@member_password     := :password,
 				@member_cip	         := :cip,
 				@member_facebook     := :facebook,
-				@is_permanent 	     := :is_permanent,
-				@is_admin            := :is_admin,
+				@member_role         := :role,
 				@member_phone        := :phone
 			)";
 
@@ -152,10 +146,9 @@ class MemberTableGateway extends BaseGateway {
             new PDOBinding('last_name', $lastName, ParameterType::STRING),
             new PDOBinding('email', $email, ParameterType::STRING),
             new PDOBinding('password', $password, ParameterType::STRING),
+            new PDOBinding('role', $role, ParameterType::INTEGER),
             new PDOBinding('facebook', $facebook, ParameterType::STRING),
             new PDOBinding('cip', $university, ParameterType::STRING),
-            new PDOBinding('is_permanent', $isPermanent, ParameterType::BOOLEAN),
-            new PDOBinding('is_admin', $isAdmin, ParameterType::BOOLEAN),
             new PDOBinding('phone', $phone, ParameterType::STRING)
 
         );

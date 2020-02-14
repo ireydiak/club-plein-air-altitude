@@ -27,7 +27,7 @@ class UserStoreRequest extends FormRequest
             'firstName'     => 'required|regex:/^([0-9\p{Latin}]+[\ -]?)+[a-zA-Z0-9]+$/u',
             'lastName'      => 'required|regex:/^([0-9\p{Latin}]+[\ -]?)+[a-zA-Z0-9]+$/u',
             'email'         => 'required|email|unique:member',
-            'role'          => 'required|in:Membre,Admin,Permanent',
+            'role'          => 'required|exists:role,role_id',
             'phone'         => 'nullable|phone:AUTO,CA',
             'phoneRegion'   => 'nullable|required_with:phone',
             'cip'           => 'nullable|regex:/[a-z]{4}[0-9]{4}/i|unique:member_university',

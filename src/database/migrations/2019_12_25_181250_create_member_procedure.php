@@ -18,8 +18,6 @@ class CreateMemberProcedure extends Migration
             $this->createMemberCreateProcedure();
             // add member contact information
             $this->createMemberContactProcedure();
-            // update member privileges
-            $this->createMemberPrivilegesProcedure();
             // update member table information
             $this->createUpdateMemberProcedure();
         });
@@ -34,7 +32,6 @@ class CreateMemberProcedure extends Migration
     {
         DB::unprepared('DROP PROCEDURE create_member;');
         DB::unprepared('DROP PROCEDURE IF EXISTS update_member_contact;');
-        DB::unprepared('DROP PROCEDURE IF EXISTS update_member_privileges;');
         DB::unprepared('DROP PROCEDURE IF EXISTS update_member');
     }
 
@@ -49,13 +46,12 @@ class CreateMemberProcedure extends Migration
                     member_password     VARCHAR(555),
                     member_cip          CHAR(8),
                     member_facebook     VARCHAR(255),
-                    is_permanent        BOOLEAN,
-                    is_admin            BOOLEAN,
+                    member_role         BIGINT,
                     phone               VARCHAR(15)
                 )
                 BEGIN
-                    INSERT INTO member (member_id, first_name, last_name, email, password, created_at, updated_at)
-                    VALUES (NULL, member_first_name, member_last_name, member_email, member_password, NOW(), NOW())
+                    INSERT INTO member (member_id, first_name, last_name, email, password, role_id, created_at, updated_at)
+                    VALUES (NULL, member_first_name, member_last_name, member_email, member_password, member_role, NOW(), NOW())
                     ;
 
                     SET @member_uid = (
@@ -64,7 +60,6 @@ class CreateMemberProcedure extends Migration
                     ;
 
                     CALL update_member_contact(@member_uid, member_cip, member_facebook, phone);
-                    CALL update_member_privileges(@member_uid, is_permanent, is_admin);
 
                     SELECT * FROM member_view WHERE member_id = @member_uid;
                 END;
@@ -113,29 +108,6 @@ class CreateMemberProcedure extends Migration
         ");
     }
 
-    private function createMemberPrivilegesProcedure() {
-        DB::unprepared('
-            DROP PROCEDURE IF EXISTS update_member_privileges;
-            CREATE PROCEDURE update_member_privileges(
-                member_uid     BIGINT,
-                is_permanent  BOOLEAN,
-                is_admin      BOOLEAN
-            )
-            BEGIN
-                IF is_permanent IS TRUE THEN
-                    INSERT IGNORE INTO permanent (member_id) VALUES(member_uid);
-                ELSE
-                    DELETE FROM permanent WHERE member_id = member_uid;
-                END IF;
-                IF is_admin IS TRUE THEN
-                    INSERT IGNORE INTO admin (member_id) VALUES(member_uid);
-                ELSE
-                    DELETE FROM admin WHERE member_id = member_uid;
-                END IF;
-            END;
-        ');
-    }
-
     private function createUpdateMemberProcedure() {
         DB::unprepared('
             DROP PROCEDURE IF EXISTS update_member;
@@ -147,8 +119,7 @@ class CreateMemberProcedure extends Migration
                 member_password     VARCHAR(555),
                 member_cip          CHAR(8),
                 member_facebook     VARCHAR(255),
-                is_permanent        BOOLEAN,
-                is_admin            BOOLEAN,
+                member_role         BIGINT,
                 member_phone        VARCHAR(15)
             )
             BEGIN
@@ -157,11 +128,11 @@ class CreateMemberProcedure extends Migration
                         last_name = member_last_name,
                         password = member_password,
                         email = member_email,
+                        role_id = member_role,
                         updated_at = NOW()
                 WHERE member_id = member_uid;
 
                 CALL update_member_contact(member_uid, member_cip, member_facebook, member_phone);
-                CALL update_member_privileges(member_uid, is_permanent, is_admin);
 
                 SELECT * FROM member_view WHERE member_id = member_uid;
             END;

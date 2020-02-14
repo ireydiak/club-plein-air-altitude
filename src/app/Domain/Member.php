@@ -68,6 +68,18 @@ class Member extends BaseDomain {
     public $role;
 
     /**
+     * @var
+     */
+    public $membership;
+
+    /**
+     * If the member has an active membership or not
+     *
+     * @var boolean
+     */
+    public $isActive;
+
+    /**
      * @var int
      */
     public const REGULAR_ROLE = 'Membre';
@@ -82,10 +94,9 @@ class Member extends BaseDomain {
      */
     public const ADMIN_ROLE = 'Admin';
 
-    public function __construct(array $attributes) {
+    public function __construct($attributes) {
         $this->fill($attributes);
-        $this->setRole($attributes['is_admin'] + $attributes['is_permanent']);
-        $this->role = $this->role ?? self::REGULAR_ROLE;
+        $this->isActive = $this->defaultIfNotSet($attributes, 'is_active', false);
     }
 
     public function setPassword(string $password): Member {
